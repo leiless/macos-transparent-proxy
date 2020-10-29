@@ -11,8 +11,8 @@ set -eu
 GRN="\033[92m"
 RST="\033[0m"
 
-# tc stands for trace command, useful for presentation and debugging.
-tc() {
+# xx used for tracing command, useful for presentation and debugging.
+xx() {
     echo -en "+ $GRN"
     echo -n $@
     echo -e "$RST"
@@ -23,7 +23,7 @@ setup_pf_table() {
     #URL=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
     NAME="$(basename "$URL")"
-    tc curl -fsSL "$URL" -o "$NAME"
+    xx curl -fsSL "$URL" -o "$NAME"
     # Add a trailing linefeed for later file concatenation
     echo >> "$NAME"
 
@@ -58,13 +58,13 @@ pass out route-to (lo0 127.0.0.1) proto tcp from any to !<direct>
 
 EOL
 
-    tc sudo pfctl -e || true
-    tc sudo pfctl -F all
-    tc sudo pfctl -f /var/tmp/pf/pf.conf
+    xx sudo pfctl -e || true
+    xx sudo pfctl -F all
+    xx sudo pfctl -f /var/tmp/pf/pf.conf
 
-    tc sudo pfctl -vvvs Tables
-    tc sudo pfctl -vvvs nat
-    tc sudo pfctl -vvvs rules
+    xx sudo pfctl -vvvs Tables
+    xx sudo pfctl -vvvs nat
+    xx sudo pfctl -vvvs rules
 }
 
 is_ipv4() {
@@ -97,5 +97,8 @@ done
 
 cd "$(dirname "$0")"
 
-tc setup_pf_table "$@"
+# Ask sudo privilege in advance, will cache later.
+sudo printf ""
+
+xx setup_pf_table "$@"
 
