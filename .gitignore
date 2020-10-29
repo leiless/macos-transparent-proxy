@@ -1,4 +1,6 @@
 *.txt
+*.swp
+*.swo
 redsocks/
 redsocks2
 redsocks2-debug

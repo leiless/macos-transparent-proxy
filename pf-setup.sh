@@ -7,15 +7,23 @@
 set -eu
 #set -x
 
-fix_cwd() {
-    cd "$(dirname "$0")"
+# see: https://misc.flogisoft.com/bash/tip_colors_and_formatting
+GRN="\033[92m"
+RST="\033[0m"
+
+# tc stands for trace command, useful for presentation and debugging.
+tc() {
+    echo -en "+ $GRN"
+    echo -n $@
+    echo -e "$RST"
+    "$@"
 }
 
 setup_pf_table() {
     #URL=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
     NAME="$(basename "$URL")"
-    curl -fsSL "$URL" -o "$NAME"
+    tc curl -fsSL "$URL" -o "$NAME"
     # Add a trailing linefeed for later file concatenation
     echo >> "$NAME"
 
@@ -50,18 +58,13 @@ pass out route-to (lo0 127.0.0.1) proto tcp from any to !<direct>
 
 EOL
 
-    sudo pfctl -e || true
-    sudo pfctl -F all
-    sudo pfctl -f /var/tmp/pf/pf.conf
+    tc sudo pfctl -e || true
+    tc sudo pfctl -F all
+    tc sudo pfctl -f /var/tmp/pf/pf.conf
 
-    echo
-
-    echo "> pf tables:"
-    sudo pfctl -vvvs Tables
-    echo "> pf NAT rules:"
-    sudo pfctl -vvvs nat
-    echo "> pf filter rules:"
-    sudo pfctl -vvvs rules
+    tc sudo pfctl -vvvs Tables
+    tc sudo pfctl -vvvs nat
+    tc sudo pfctl -vvvs rules
 }
 
 is_ipv4() {
@@ -92,6 +95,7 @@ for IP in "$@"; do
     fi
 done
 
-fix_cwd
-setup_pf_table "$@"
+cd "$(dirname "$0")"
+
+tc setup_pf_table "$@"
 
