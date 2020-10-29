@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 8227494..b4f8482 100644
+index 8227494..606cbe9 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -2,14 +2,14 @@ ifdef DISABLE_SHADOWSOCKS
@@ -15,7 +15,7 @@ index 8227494..b4f8482 100644
          tcpdns.o gen/version.o
 -CFLAGS +=-fPIC -O3
  endif
-+CFLAGS += -fPIC -O0 -DDEBUG -g -mmacosx-version-min=10.8
++CFLAGS += -fPIC -mmacosx-version-min=10.8
  SRCS := $(OBJS:.o=.c)
  CONF := config.h
  DEPS := .depend
@@ -42,6 +42,15 @@ index 8227494..b4f8482 100644
  ifdef USE_CRYPTO_POLARSSL
  override LIBS += -lpolarssl
  override CFLAGS += -DUSE_CRYPTO_POLARSSL
+@@ -58,7 +59,7 @@ override LDFLAGS += -Wl,-static -static -static-libgcc -s
+ override FEATURES += STATIC_COMPILE
+ endif
+ 
+-all: $(OUT)
++all: debug
+ 
+ .PHONY: all clean distclean
+ 
 @@ -92,11 +93,8 @@ gen/version.c: *.c *.h gen/.build
  	echo '#include "../version.h"' >> $@.tmp
  	echo 'const char* redsocks_version = ' >> $@.tmp
@@ -56,7 +65,22 @@ index 8227494..b4f8482 100644
  		echo '"Features: $(FEATURES)"'; \
  	else \
  		echo '"redsocks/$(VERSION) $(CRYPTO)"'; \
-@@ -151,9 +149,9 @@ $(OUT): $(OBJS)
+@@ -146,14 +144,24 @@ $(DEPS): $(OSX_HEADERS) $(SRCS)
+ 
+ -include $(DEPS)
+ 
++# see: https://www.gnu.org/software/make/manual/html_node/Target_002dspecific.html
++# Those two flags must present at the same time  o.w. debug symbol cannot be generated
++debug: CPPFLAGS += -g -DDEBUG
++debug: CFLAGS += -O0
++debug: $(OUT)
++
++# see: https://stackoverflow.com/questions/15548023/clang-optimization-levels
++release: CFLAGS += -O2
++release: $(OUT)
++
+ $(OUT): $(OBJS)
+ 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
  
  clean:
  	$(RM) $(CONF) $(OBJS)
