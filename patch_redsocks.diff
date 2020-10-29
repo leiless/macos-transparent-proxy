@@ -1,0 +1,292 @@
+diff --git a/Makefile b/Makefile
+index 8227494..b4f8482 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,14 +2,14 @@ ifdef DISABLE_SHADOWSOCKS
+ OBJS := parser.o main.o redsocks.o log.o direct.o ipcache.o autoproxy.o http-connect.o \
+         socks4.o socks5.o http-relay.o base.o base64.o md5.o http-auth.o utils.o redudp.o socks5-udp.o \
+         tcpdns.o gen/version.o
+-CFLAGS +=-fPIC -O3 -DDISABLE_SHADOWSOCKS
++CFLAGS += -DDISABLE_SHADOWSOCKS
+ FEATURES += DISABLE_SHADOWSOCKS
+ else
+ OBJS := parser.o main.o redsocks.o log.o direct.o ipcache.o autoproxy.o encrypt.o shadowsocks.o http-connect.o \
+         socks4.o socks5.o http-relay.o base.o base64.o md5.o http-auth.o utils.o redudp.o socks5-udp.o shadowsocks-udp.o \
+         tcpdns.o gen/version.o
+-CFLAGS +=-fPIC -O3
+ endif
++CFLAGS += -fPIC -O0 -DDEBUG -g -mmacosx-version-min=10.8
+ SRCS := $(OBJS:.o=.c)
+ CONF := config.h
+ DEPS := .depend
+@@ -18,12 +18,12 @@ VERSION := 0.68
+ OS := $(shell uname)
+ 
+ LIBS := -levent
+-override CFLAGS += -D_BSD_SOURCE -D_DEFAULT_SOURCE -Wall
++override CFLAGS += -D_BSD_SOURCE -D_DEFAULT_SOURCE -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-const-variable
+ ifeq ($(OS), Linux)
+ override CFLAGS += -std=c99 -D_XOPEN_SOURCE=600
+ endif
+ ifeq ($(OS), Darwin)
+-override CFLAGS +=-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib
++override CFLAGS +=-I/usr/local/opt/openssl/include
+ SHELL := /bin/bash
+ OSX_VERSION := $(shell sw_vers -productVersion | cut -d '.' -f 1,2)
+ OSX_ROOT_PATH := xnu
+@@ -34,6 +34,7 @@ endif
+ 
+ 
+ #LDFLAGS += -fwhole-program
++LDFLAGS += -L/usr/local/opt/openssl@1.1/lib
+ ifdef USE_CRYPTO_POLARSSL
+ override LIBS += -lpolarssl
+ override CFLAGS += -DUSE_CRYPTO_POLARSSL
+@@ -92,11 +93,8 @@ gen/version.c: *.c *.h gen/.build
+ 	echo '#include "../version.h"' >> $@.tmp
+ 	echo 'const char* redsocks_version = ' >> $@.tmp
+ 	if [ -d .git ]; then \
+-		echo '"redsocks.git/'`git describe --tags`' $(CRYPTO)"'; \
+-		if [ `git status --porcelain | grep -v -c '^??'` != 0 ]; then \
+-			echo '"-unclean"'; \
+-		fi; \
+-		echo '"\\n"'; \
++		echo '"redsocks.git/'`git describe --dirty --always`' $(CRYPTO)"'; \
++		echo '"\n"'; \
+ 		echo '"Features: $(FEATURES)"'; \
+ 	else \
+ 		echo '"redsocks/$(VERSION) $(CRYPTO)"'; \
+@@ -151,9 +149,9 @@ $(OUT): $(OBJS)
+ 
+ clean:
+ 	$(RM) $(CONF) $(OBJS)
++	$(RM) -r gen
+ 
+ distclean: clean
+ 	$(RM) $(OUT)
+ 	$(RM) tags $(DEPS)
+-	$(RM) -r gen
+ 	$(RM) -r $(OSX_ROOT_PATH)
+diff --git a/encrypt.c b/encrypt.c
+index ce04c6f..033e915 100644
+--- a/encrypt.c
++++ b/encrypt.c
+@@ -278,7 +278,7 @@ static void enc_table_init(enc_info * info, const char *pass)
+     }
+ }
+ 
+-int cipher_iv_size(const cipher_kt_t *cipher)
++int cipher_iv_size(const EVP_CIPHER *cipher)
+ {
+ #if defined(USE_CRYPTO_OPENSSL)
+     return EVP_CIPHER_iv_length(cipher);
+@@ -290,7 +290,7 @@ int cipher_iv_size(const cipher_kt_t *cipher)
+ #endif
+ }
+ 
+-int cipher_key_size(const cipher_kt_t *cipher)
++int cipher_key_size(const EVP_CIPHER *cipher)
+ {
+ #if defined(USE_CRYPTO_OPENSSL)
+     return EVP_CIPHER_key_length(cipher);
+@@ -307,7 +307,7 @@ int cipher_key_size(const cipher_kt_t *cipher)
+ #endif
+ }
+ 
+-int bytes_to_key(const cipher_kt_t *cipher, const digest_type_t *md,
++int bytes_to_key(const EVP_CIPHER *cipher, const digest_type_t *md,
+                  const uint8_t *pass, uint8_t *key, uint8_t *iv)
+ {
+     size_t datal;
+@@ -472,7 +472,7 @@ int rand_bytes(uint8_t *output, int len)
+ #endif
+ }
+ 
+-const cipher_kt_t *get_cipher_type(int method)
++const EVP_CIPHER *get_cipher_type(int method)
+ {
+     if (method <= TABLE || method >= CIPHER_NUM) {
+         //LOGE("get_cipher_type(): Illegal method");
+@@ -547,8 +547,8 @@ static int cipher_context_init(const enc_info * info, cipher_ctx_t *ctx, int enc
+     }
+ #endif
+ 
+-    cipher_evp_t *evp = &ctx->evp;
+-    const cipher_kt_t *cipher = get_cipher_type(method);
++    EVP_CIPHER_CTX *evp = ctx->evp;
++    const EVP_CIPHER *cipher = get_cipher_type(method);
+ #if defined(USE_CRYPTO_OPENSSL)
+     if (cipher == NULL) {
+         // Cipher is not found in OpenSSL library
+@@ -642,7 +642,7 @@ static void cipher_context_set_iv(const enc_info * info, cipher_ctx_t *ctx, uint
+     }
+ #endif
+ 
+-    cipher_evp_t *evp = &ctx->evp;
++    EVP_CIPHER_CTX *evp = ctx->evp;
+     if (evp == NULL) {
+         //LOGE("cipher_context_set_iv(): Cipher context is null");
+         return;
+@@ -696,7 +696,7 @@ static void cipher_context_release(enc_info * info, cipher_ctx_t *ctx)
+     }
+ #endif
+ 
+-    cipher_evp_t *evp = &ctx->evp;
++    EVP_CIPHER_CTX *evp = ctx->evp;
+ #if defined(USE_CRYPTO_OPENSSL)
+     EVP_CIPHER_CTX_cleanup(evp);
+ #elif defined(USE_CRYPTO_POLARSSL)
+@@ -716,7 +716,7 @@ static int cipher_context_update(cipher_ctx_t *ctx, uint8_t *output, int *olen,
+         return (ret == kCCSuccess) ? 1 : 0;
+     }
+ #endif
+-    cipher_evp_t *evp = &ctx->evp;
++    EVP_CIPHER_CTX *evp = ctx->evp;
+ #if defined(USE_CRYPTO_OPENSSL)
+     return EVP_CipherUpdate(evp, (uint8_t *)output, olen,
+                             (const uint8_t *)input, (size_t)ilen);
+@@ -730,7 +730,7 @@ static int cipher_context_update(cipher_ctx_t *ctx, uint8_t *output, int *olen,
+ size_t ss_calc_buffer_size(struct enc_ctx * ctx, size_t ilen)
+ {
+     int method = ctx->info->method;
+-    const cipher_kt_t *cipher = get_cipher_type(method);
++    const EVP_CIPHER *cipher = get_cipher_type(method);
+ #if defined(USE_CRYPTO_OPENSSL)
+     if (ctx->init)
+         return ilen + EVP_CIPHER_block_size(cipher); 
+@@ -915,8 +915,8 @@ static int enc_key_init(enc_info * info, int method, const char *pass)
+ 
+     uint8_t iv[MAX_IV_LENGTH];
+ 
+-    cipher_kt_t *cipher = NULL;
+-    cipher_kt_t cipher_info;
++    EVP_CIPHER *cipher = NULL;
++    EVP_CIPHER *cipher_info;
+ 
+ 
+     if (method == SALSA20 || method == CHACHA20) {
+@@ -925,7 +925,7 @@ static int enc_key_init(enc_info * info, int method, const char *pass)
+             //FATAL("Failed to initialize sodium");
+         }
+         // Fake cipher
+-        cipher = (cipher_kt_t *)&cipher_info;
++        cipher = (EVP_CIPHER *)&cipher_info;
+ #if defined(USE_CRYPTO_OPENSSL)
+         cipher->key_len = supported_ciphers_key_size[method];
+         cipher->iv_len = supported_ciphers_iv_size[method];
+@@ -937,7 +937,7 @@ static int enc_key_init(enc_info * info, int method, const char *pass)
+ #endif
+ */
+     } else {
+-        cipher = (cipher_kt_t *)get_cipher_type(method);
++        cipher = (EVP_CIPHER *)get_cipher_type(method);
+     }
+ 
+     if (cipher == NULL) {
+@@ -947,7 +947,7 @@ static int enc_key_init(enc_info * info, int method, const char *pass)
+                 cipher_info.base = NULL;
+                 cipher_info.key_length = supported_ciphers_key_size[method] * 8;
+                 cipher_info.iv_size = supported_ciphers_iv_size[method];
+-                cipher = (cipher_kt_t *)&cipher_info;
++                cipher = (EVP_CIPHER *)&cipher_info;
+                 break;
+             }
+ #endif
+diff --git a/encrypt.h b/encrypt.h
+index 61b3fc7..2249624 100644
+--- a/encrypt.h
++++ b/encrypt.h
+@@ -45,8 +45,6 @@
+ #if defined(USE_CRYPTO_OPENSSL)
+ 
+ #include <openssl/evp.h>
+-typedef EVP_CIPHER cipher_kt_t;
+-typedef EVP_CIPHER_CTX cipher_evp_t;
+ typedef EVP_MD digest_type_t;
+ #define MAX_KEY_LENGTH EVP_MAX_KEY_LENGTH
+ #define MAX_IV_LENGTH EVP_MAX_IV_LENGTH
+@@ -56,8 +54,6 @@ typedef EVP_MD digest_type_t;
+ 
+ #include <polarssl/cipher.h>
+ #include <polarssl/md.h>
+-typedef cipher_info_t cipher_kt_t;
+-typedef cipher_context_t cipher_evp_t;
+ typedef md_info_t digest_type_t;
+ #define MAX_KEY_LENGTH 64
+ #define MAX_IV_LENGTH POLARSSL_MAX_IV_LENGTH
+@@ -89,7 +85,7 @@ typedef struct {
+ #endif
+ 
+ typedef struct {
+-    cipher_evp_t evp;
++    EVP_CIPHER_CTX *evp;
+ #ifdef USE_CRYPTO_APPLECC
+     cipher_cc_t cc;
+ #endif
+diff --git a/list.h b/list.h
+index 8200a16..6ad8632 100644
+--- a/list.h
++++ b/list.h
+@@ -31,6 +31,12 @@ typedef struct list_head_t {
+ 
+ #define LIST_HEAD_INIT(name) { &(name), &(name) }
+ 
++/* see: https://stackoverflow.com/questions/142508/how-do-i-check-os-with-a-preprocessor-directive */
++#if defined(__APPLE__) && defined(__MACH__)
++/* Undefine the same macro in <sys/queue.h> */
++#undef LIST_HEAD
++#endif
++
+ #define LIST_HEAD(name) \
+ 	struct list_head_t name = LIST_HEAD_INIT(name)
+ 
+diff --git a/log.c b/log.c
+index 53a638d..a89bd02 100644
+--- a/log.c
++++ b/log.c
+@@ -50,10 +50,17 @@ static void fprint_timestamp(
+ 	/* XXX: there is no error-checking, IMHO it's better to lose messages
+ 	 *      then to die and stop service */
+ 	const char* sprio = getprioname(priority);
++#if defined(__APPLE__) && defined(__MACH__)
++	if (appendix)
++		fprintf(fd, "%lu.%6.6d %s %s:%u %s(...) %s: %s\n", tv.tv_sec, tv.tv_usec, sprio, file, line, func, message, appendix);
++	else
++		fprintf(fd, "%lu.%6.6d %s %s:%u %s(...) %s\n", tv.tv_sec, tv.tv_usec, sprio, file, line, func, message);
++#else
+ 	if (appendix)
+ 		fprintf(fd, "%lu.%6.6lu %s %s:%u %s(...) %s: %s\n", tv.tv_sec, tv.tv_usec, sprio, file, line, func, message, appendix);
+ 	else
+ 		fprintf(fd, "%lu.%6.6lu %s %s:%u %s(...) %s\n", tv.tv_sec, tv.tv_usec, sprio, file, line, func, message);
++#endif
+ }
+ 
+ static void stderr_msg(const char *file, int line, const char *func, int priority, const char *message, const char *appendix)
+diff --git a/main.c b/main.c
+index ad43939..5122c4c 100644
+--- a/main.c
++++ b/main.c
+@@ -113,6 +113,12 @@ static void wait_for_network()
+     } while (err != 0);
+ }
+ 
++#ifdef USE_CRYPTO_OPENSSL
++// see: https://www.openssl.org/docs/manmaster/man3/OPENSSL_VERSION_NUMBER.html
++#include <openssl/opensslv.h>
++#include <openssl/crypto.h>
++#endif
++
+ int main(int argc, char **argv)
+ {
+     int error;
+@@ -144,6 +150,10 @@ int main(int argc, char **argv)
+             puts(redsocks_version);
+             printf("Built with libevent-%s\n", LIBEVENT_VERSION);
+             printf("Runs  with libevent-%s\n", event_get_version());
++#ifdef USE_CRYPTO_OPENSSL
++            printf("Built with %s\n", OPENSSL_VERSION_TEXT);
++            printf("Runs  with %s\n", OpenSSL_version(OPENSSL_VERSION));
++#endif
+             if (LIBEVENT_VERSION_NUMBER != event_get_version_number()) {
+                 printf("Warning: libevent version number mismatch.\n"
+                        "  Headers: %8x\n"
