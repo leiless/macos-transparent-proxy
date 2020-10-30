@@ -181,6 +181,19 @@ disable_proxy() {
     echo todo
 }
 
+is_pf_enabled() {
+    OUTPUT="$( (sudo pfctl -e || true) 2>&1 | grep 'pf ')"
+    if [ "$OUTPUT" == "pf enabled" ]; then
+        sudo pfctl -d 2> /dev/null
+        return 1
+    elif [ "$OUTPUT" == "pfctl: pf already enabled" ]; then
+        return 0
+    else
+        errecho "'sudo pfctl -e' unexpected output: '$OUTPUT'"
+        exit 1
+    fi
+}
+
 show_status() {
     ask_sudo
 
@@ -207,6 +220,13 @@ show_status() {
         echo "redsocks2 is running."
     else
         echo "redsocks2 is not running."
+    fi
+    echo
+
+    if xx is_pf_enabled; then
+        echo "pf is enabled."
+    else
+        echo "pf is disabled."
     fi
     echo
 
