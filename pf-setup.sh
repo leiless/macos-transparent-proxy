@@ -66,6 +66,7 @@ config_proxy() {
     IPLIST="$(echo $IPLIST)"
     FILE=proxy_ip_list.txt
     echo "$IPLIST" | tr ' ' '\n' > "$FILE"
+    echo "Saved $IPLIST to $FILE"
 }
 
 gh_latest_release() {
@@ -164,7 +165,7 @@ EOL
     xx sudo pfctl -vvvs rules
 }
 
-enable_proxy() {
+start_proxy() {
     FILE=proxy_ip_list.txt
     if [ ! -f "$FILE" ]; then
         errecho "Please run '$(basename "$0") config' first"
@@ -175,10 +176,12 @@ enable_proxy() {
     setup_network
     setup_redsocks2
     setup_pf
+
+    xx curl -4sL https://ifconfig.co/json | python -m json.tool
 }
 
-# Essentially reverse operation of enable_proxy
-disable_proxy() {
+# Essentially reverse operation of start_proxy
+stop_proxy() {
     FILE=proxy_ip_list.txt
     if [ ! -f "$FILE" ]; then
         errecho "Config file not found, skip disable proxy."
@@ -195,6 +198,8 @@ disable_proxy() {
     xx networksetup -setv6automatic "$DEV"
 
     xx sudo killall -KILL coredns || true
+
+    xx curl -4sL https://ifconfig.co/json | python -m json.tool
 }
 
 is_pf_enabled() {
@@ -269,8 +274,9 @@ usage() {
     cat << EOL
 Usage:
     $(basename "$0") config
-    $(basename "$0") enable
-    $(basename "$0") disable
+    $(basename "$0") start
+    $(basename "$0") stop
+    $(basename "$0") restart
     $(basename "$0") show
 
 EOL
@@ -288,14 +294,19 @@ case "$1" in
         [ $# -ne 1 ] && usage 1
         xx config_proxy
     ;;
-    "enable")
+    "start")
         [ $# -ne 1 ] && usage 1
-        enable_proxy
+        start_proxy
     ;;
-    "disable")
+    "stop")
         [ $# -ne 1 ] && usage 1
-        disable_proxy
-    ;;
+        stop_proxy
+        ;;
+    "restart")
+        [ $# -ne 1 ] && usage 1
+        stop_proxy
+        start_proxy
+        ;;
     "show")
         [ $# -ne 1 ] && usage 1
         show_status
