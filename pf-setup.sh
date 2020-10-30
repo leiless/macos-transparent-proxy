@@ -41,7 +41,30 @@ is_ipv4() {
 }
 
 config_proxy() {
-    echo TODO
+    read -r -p "Enter proxy server(s): " HOST
+    if [ -z "$HOST" ]; then
+        errecho No host specified
+        exit 1
+    fi
+
+    IPLIST=""
+    for i in $HOST; do
+        if ! is_ipv4 "$i"; then
+            IPS="$(xx dig +short "$i")"
+            if [ -z "$IPS" ]; then
+                errecho "Cannot get DNS A record of '$i'"
+                exit 1
+            fi
+            i="$IPS"
+        fi
+        IPLIST="$IPLIST $i"
+    done
+
+    # shellcheck disable=SC2086
+    # shellcheck disable=SC2116
+    IPLIST="$(echo $IPLIST)"
+    FILE=proxy_ip_list.txt
+    echo "$IPLIST" | tr ' ' '\n' > "$FILE"
 }
 
 enable_proxy() {
@@ -138,4 +161,3 @@ esac
 # Ask sudo privilege in advance, will cache later.
 #sudo printf ""
 #xx setup_pf_table "$@"
-
