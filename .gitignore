@@ -3,4 +3,5 @@
 *.swo
 redsocks/
 redsocks2/
+.idea/
 

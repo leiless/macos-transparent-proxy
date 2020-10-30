@@ -51,6 +51,7 @@ config_proxy() {
     for i in $HOST; do
         if ! is_ipv4 "$i"; then
             IPS="$(xx dig +short "$i")"
+            # TODO: filter out IPv6 if any
             if [ -z "$IPS" ]; then
                 errecho "Cannot get DNS A record of '$i'"
                 exit 1
@@ -68,6 +69,12 @@ config_proxy() {
 }
 
 enable_proxy() {
+    FILE=proxy_ip_list.txt
+    if [ ! -f "$FILE" ]; then
+        errecho "Please run '$(basename "$0") config' first"
+        exit 1
+    fi
+
     #URL=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
     NAME="$(basename "$URL")"
