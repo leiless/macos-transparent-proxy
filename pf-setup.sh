@@ -24,12 +24,27 @@ fi
 # Trace output will be write to stderr, just as set -x.
 xx() {
     echo -ne "$RED+ $GRN" 1>&2
-    echo -n "$@" 1>&2
-    echo -e "$RST" 1>&2
+    echo "$@" 1>&2
+    echo -ne "$RST" 1>&2
     "$@"
 }
 
-setup_pf_table() {
+errecho() {
+    echo -ne "$RED" 1>&2
+    echo -ne "[ERROR] "
+    echo "$@" 1>&2
+    echo -ne "$RST" 1>&2
+}
+
+is_ipv4() {
+    echo "$1" | grep -Eq "^[0-9]{1,3}(\.[0-9]{1,3}){3}$"
+}
+
+config_proxy() {
+    echo TODO
+}
+
+enable_proxy() {
     #URL=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
     NAME="$(basename "$URL")"
@@ -47,11 +62,6 @@ setup_pf_table() {
 224.0.0.0/4
 240.0.0.0/4
 EOL
-
-    rm -f proxy_ip_list.txt
-    for IP in "$@"; do
-        echo $IP >> proxy_ip_list.txt
-    done
 
     cat *_ip_list.txt > direct.txt
     mkdir -p /var/tmp/pf
@@ -77,12 +87,12 @@ EOL
     xx sudo pfctl -vvvs rules
 }
 
-is_ipv4() {
-    if [ $# -ne 1 ]; then
-        echo "ERROR: expected one argument"
-        return 1
-    fi
-    echo "$1" | grep -Eq "^[0-9]{1,3}(\.[0-9]{1,3}){3}$"
+disable_proxy() {
+    echo todo
+}
+
+show_status() {
+    echo TODO
 }
 
 usage() {
@@ -100,6 +110,8 @@ EOL
 if [ $# -eq 0 ]; then
     usage 0
 fi
+
+cd "$(dirname "$0")"
 
 case "$1" in
     "config")
@@ -123,19 +135,7 @@ case "$1" in
     ;;
 esac
 
-exit
-
-# see: https://stackoverflow.com/questions/2761723/what-is-the-difference-between-and-in-shell-scripts
-for IP in "$@"; do
-    if ! is_ipv4 "$IP"; then
-        usage 1
-    fi
-done
-
-cd "$(dirname "$0")"
-
 # Ask sudo privilege in advance, will cache later.
-sudo printf ""
-
-xx setup_pf_table "$@"
+#sudo printf ""
+#xx setup_pf_table "$@"
 
