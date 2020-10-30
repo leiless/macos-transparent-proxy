@@ -10,15 +10,22 @@ set -eu
 # see:
 #   https://misc.flogisoft.com/bash/tip_colors_and_formatting
 #   https://gist.github.com/leiless/408b978965fc76b3c41b837811a475d2
-RED="$(tput setaf 9)"
-GRN="$(tput setaf 10)"
-RST="$(tput sgr0)"
+if [ -t 2 ]; then
+    RED="$(tput setaf 9)"
+    GRN="$(tput setaf 10)"
+    RST="$(tput sgr0)"
+else
+    RED=""
+    GRN=""
+    RST=""
+fi
 
 # xx used for tracing command, useful for presentation and debugging.
+# Trace output will be write to stderr, just as set -x.
 xx() {
-    echo -ne "$RED+ $GRN"
-    echo -n $@
-    echo -e "$RST"
+    echo -ne "$RED+ $GRN" 1>&2
+    echo -n "$@" 1>&2
+    echo -e "$RST" 1>&2
     "$@"
 }
 
