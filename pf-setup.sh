@@ -68,11 +68,6 @@ config_proxy() {
     echo "$IPLIST" | tr ' ' '\n' > "$FILE"
 }
 
-setup_redsocks2() {
-    # TODO: download redsocks2 first
-    redsocks2/redsocks2-release -c release.conf
-}
-
 gh_latest_release() {
     curl -fsSL "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | cut -d'"' -f4
 }
@@ -99,12 +94,25 @@ setup_coredns() {
     xx rm -f coredns
     xx ln -s "$(basename "$FILE" .zip)" coredns
     xx touch direct.conf
-    #./coredns
+    ./coredns 2>&1 coredns.log &
     xx popd
 }
 
 setup_network() {
-    echo TODO
+    NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
+    DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+    xx networksetup -setdnsservers "$DEV" 127.0.0.1
+    xx networksetup -setv6off "$DEV"
+}
+
+# Ask sudo in advance
+ask_sudo() {
+    sudo printf ""
+}
+
+setup_redsocks2() {
+    # TODO: download redsocks2 first
+    redsocks2/redsocks2-release -c release.conf
 }
 
 setup_pf() {
@@ -157,6 +165,15 @@ EOL
 }
 
 enable_proxy() {
+    FILE=proxy_ip_list.txt
+    if [ ! -f "$FILE" ]; then
+        errecho "Please run '$(basename "$0") config' first"
+        exit 1
+    fi
+
+    setup_coredns
+    setup_network
+    setup_redsocks2
     setup_pf
 }
 
@@ -165,7 +182,39 @@ disable_proxy() {
 }
 
 show_status() {
-    echo TODO
+    ask_sudo
+
+    if xx pgrep -q coredns; then
+        echo "coredns is running."
+    else
+        echo "coredns is not running."
+    fi
+    echo
+
+    NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
+    DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+    xx networksetup -getdnsservers "$DEV"
+    echo
+
+    if [ "$(xx ifconfig "$NET" | grep -Ec "\sinet6\s")" -ne 0 ]; then
+        echo "$DEV seems have IPv6 access, need manual confirmation."
+    else
+        echo "$DEV have no IPv6 access."
+    fi
+    echo
+
+    if xx pgrep -q redsocks; then
+        echo "redsocks2 is running."
+    else
+        echo "redsocks2 is not running."
+    fi
+    echo
+
+    xx sudo pfctl -vvvs Tables
+    echo
+    xx sudo pfctl -vvvs rules
+    echo
+    xx sudo pfctl -vvvs nat
 }
 
 usage() {
