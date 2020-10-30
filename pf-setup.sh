@@ -68,7 +68,7 @@ config_proxy() {
     echo "$IPLIST" | tr ' ' '\n' > "$FILE"
 }
 
-enable_proxy() {
+setup_pf() {
     FILE=proxy_ip_list.txt
     if [ ! -f "$FILE" ]; then
         errecho "Please run '$(basename "$0") config' first"
@@ -115,6 +115,10 @@ EOL
     xx sudo pfctl -vvvs Tables
     xx sudo pfctl -vvvs nat
     xx sudo pfctl -vvvs rules
+}
+
+enable_proxy() {
+    setup_pf
 }
 
 disable_proxy() {
@@ -164,7 +168,3 @@ case "$1" in
     usage 1
     ;;
 esac
-
-# Ask sudo privilege in advance, will cache later.
-#sudo printf ""
-#xx setup_pf_table "$@"

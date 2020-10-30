@@ -2,6 +2,7 @@
 *.swp
 *.swo
 redsocks/
-redsocks2/
+redsocks2/redsocks2*
+redsocks2/*.log
 .idea/
 
