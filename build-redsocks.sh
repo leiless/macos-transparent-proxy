@@ -38,7 +38,7 @@ xx rm -f redsocks2/redsocks2-release
 xx mkdir -p redsocks2
 
 xx pushd redsocks
-xx git apply ../patch_redsocks.diff
+xx git apply ../patches/patch_redsocks.diff
 xx make debug DISABLE_SHADOWSOCKS=true ENABLE_HTTPS_PROXY=true -j$(sysctl -n hw.ncpu)
 xx mv redsocks2 ../redsocks2/redsocks2-debug
 xx make clean
