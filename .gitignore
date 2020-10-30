@@ -4,5 +4,7 @@
 redsocks/
 redsocks2/redsocks2*
 redsocks2/*.log
+coredns/coredns*
+coredns/direct.conf
 .idea/
 

@@ -1,0 +1,78 @@
+# Checkout https://git.io/JJZ3N
+
+(global_cache) {
+    cache {
+        # success CAPACITY [TTL] [MINTTL]
+        success 65536 1800 480
+        # denial CAPACITY [TTL] [MINTTL]
+        denial 1024 300 10
+        # prefetch AMOUNT [[DURATION] [PERCENTAGE%]]
+        prefetch 1 30m 10%
+    }
+}
+
+.:53000 {
+    #debug
+    #loop
+    log . {combined}
+
+    import global_cache
+
+    dnsredir . {
+        to 114.114.114.114 223.5.5.5
+    }
+}
+
+(mainland_doh) {
+    to doh://doh.pub/dns-query
+    to ietf-doh://dns.alidns.com/dns-query
+
+    # In case dnsredir FROM is URL form
+    bootstrap 114.114.114.114 223.5.5.5
+    no_ipv6
+}
+
+.:53 {
+    #debug
+    #loop
+    log . {combined}
+    reload 2s
+    errors
+
+    hosts {
+        fallthrough
+    }
+
+    import global_cache
+
+    # accelerated, apple, google
+    dnsredir https://t.cn/A6zY4e4i https://t.cn/A6zYb6sL https://t.cn/A6zYbWEM {
+        health_check 5s
+        policy round_robin
+        import mainland_doh
+    }
+
+    # Exception list
+    dnsredir direct.conf {
+        path_reload 3s
+        health_check 10s
+        import mainland_doh
+    }
+
+    # see: https://github.com/curl/curl/wiki/DNS-over-HTTPS
+    dnsredir . {
+        expire 30s
+        max_fails 5
+        health_check 10s
+        policy random
+        spray
+
+        to doh://cloudflare-dns.com/dns-query
+        to json-doh://dns.google/resolve
+        to ietf-doh://dns.google/dns-query
+
+        bootstrap 127.0.0.1:53000
+        no_ipv6
+    }
+}
+

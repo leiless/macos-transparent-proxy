@@ -68,6 +68,45 @@ config_proxy() {
     echo "$IPLIST" | tr ' ' '\n' > "$FILE"
 }
 
+setup_redsocks2() {
+    # TODO: download redsocks2 first
+    redsocks2/redsocks2-release -c release.conf
+}
+
+gh_latest_release() {
+    curl -fsSL "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | cut -d'"' -f4
+}
+
+map_arch() {
+	T="$(uname -m)"
+	if [ "$T" = "x86_64" ]; then
+		T=amd64
+	fi
+	echo $T
+}
+
+setup_coredns() {
+    REPO="leiless/dnsredir"
+    VER="$(xx gh_latest_release $REPO)"
+    FILE="coredns_dnsredir-darwin-$(map_arch).zip"
+    URL="https://github.com/$REPO/releases/download/$VER/$FILE"
+
+    xx mkdir -p coredns
+    xx pushd coredns
+    xx wget "$URL" -O "$FILE"
+    xx yes | xx unzip -q "$FILE"
+    xx rm -f "$FILE"
+    xx rm -f coredns
+    xx ln -s "$(basename "$FILE" .zip)" coredns
+    xx touch direct.conf
+    #./coredns
+    xx popd
+}
+
+setup_network() {
+    echo TODO
+}
+
 setup_pf() {
     FILE=proxy_ip_list.txt
     if [ ! -f "$FILE" ]; then
