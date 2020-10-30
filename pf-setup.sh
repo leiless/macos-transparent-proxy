@@ -177,8 +177,24 @@ enable_proxy() {
     setup_pf
 }
 
+# Essentially reverse operation of enable_proxy
 disable_proxy() {
-    echo todo
+    FILE=proxy_ip_list.txt
+    if [ ! -f "$FILE" ]; then
+        errecho "Config file not found, skip disable proxy."
+        exit 1
+    fi
+
+    xx sudo pfctl -d || true
+
+    xx sudo killall -KILL redsocks2 || true
+
+    NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
+    DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+    xx networksetup -setdnsservers "$DEV" empty
+    xx networksetup -setv6automatic "$DEV"
+
+    xx sudo killall -KILL coredns || true
 }
 
 is_pf_enabled() {
@@ -220,6 +236,18 @@ show_status() {
         echo "redsocks2 is running."
     else
         echo "redsocks2 is not running."
+    fi
+    echo
+
+    PROTO_ADDR_PID="$(xx netstat -anvp tcp | grep -E "\sLISTEN\s" | awk '{ print $1, $4, $9 }' | grep -E "\.1080\s" || true)"
+    if [ -z "$PROTO_ADDR_PID" ]; then
+        echo "There is no process listening at port 1080 on TCP protocol."
+    else
+        PROTO="$(echo "$PROTO_ADDR_PID" | awk '{ print $1 }')"
+        ADDR="$(echo "$PROTO_ADDR_PID" | awk '{ print $2 }')"
+        PID="$(echo "$PROTO_ADDR_PID" | awk '{ print $3 }')"
+        NAME="$(basename "$(ps awx | awk "\$1 == $PID { print \$5 }")")"
+        echo "$NAME (pid = $PID) is listening at $ADDR on $PROTO."
     fi
     echo
 
