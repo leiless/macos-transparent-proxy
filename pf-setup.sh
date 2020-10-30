@@ -10,12 +10,13 @@ set -eu
 # see:
 #   https://misc.flogisoft.com/bash/tip_colors_and_formatting
 #   https://gist.github.com/leiless/408b978965fc76b3c41b837811a475d2
+RED="$(tput setaf 9)"
 GRN="$(tput setaf 10)"
 RST="$(tput sgr0)"
 
 # xx used for tracing command, useful for presentation and debugging.
 xx() {
-    echo -en "+ $GRN"
+    echo -ne "$RED+ $GRN"
     echo -n $@
     echo -e "$RST"
     "$@"
@@ -80,15 +81,42 @@ is_ipv4() {
 usage() {
     cat << EOL
 Usage:
-    $(basename "$0") IPv4...
+    $(basename "$0") config
+    $(basename "$0") enable
+    $(basename "$0") disable
+    $(basename "$0") show
 
 EOL
     exit "$1"
 }
 
 if [ $# -eq 0 ]; then
-    usage 1
+    usage 0
 fi
+
+case "$1" in
+    "config")
+        [ $# -ne 1 ] && usage 1
+        xx config_proxy
+    ;;
+    "enable")
+        [ $# -ne 1 ] && usage 1
+        enable_proxy
+    ;;
+    "disable")
+        [ $# -ne 1 ] && usage 1
+        disable_proxy
+    ;;
+    "show")
+        [ $# -ne 1 ] && usage 1
+        show_status
+    ;;
+    *)
+    usage 1
+    ;;
+esac
+
+exit
 
 # see: https://stackoverflow.com/questions/2761723/what-is-the-difference-between-and-in-shell-scripts
 for IP in "$@"; do
