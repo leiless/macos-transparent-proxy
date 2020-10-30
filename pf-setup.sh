@@ -7,9 +7,11 @@
 set -eu
 #set -x
 
-# see: https://misc.flogisoft.com/bash/tip_colors_and_formatting
-GRN="\033[92m"
-RST="\033[0m"
+# see:
+#   https://misc.flogisoft.com/bash/tip_colors_and_formatting
+#   https://gist.github.com/leiless/408b978965fc76b3c41b837811a475d2
+GRN="$(tput setaf 10)"
+RST="$(tput sgr0)"
 
 # xx used for tracing command, useful for presentation and debugging.
 xx() {
