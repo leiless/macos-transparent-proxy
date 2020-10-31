@@ -67,9 +67,14 @@
         policy random
         spray
 
-        to doh://cloudflare-dns.com/dns-query
-        to json-doh://dns.google/resolve
-        to ietf-doh://dns.google/dns-query
+        to ietf-doh://dns.adguard.com/dns-query
+        to ietf-doh://dns.quad9.net/dns-query
+        to ietf-doh://doh.opendns.com/dns-query
+
+        # Likely be polluted in mainland China
+        #to doh://cloudflare-dns.com/dns-query
+        #to json-doh://dns.google/resolve
+        #to ietf-doh://dns.google/dns-query
 
         bootstrap 127.0.0.1:53000
         no_ipv6

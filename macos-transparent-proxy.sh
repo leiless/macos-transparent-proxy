@@ -91,11 +91,14 @@ setup_coredns() {
 
     xx mkdir -p coredns
     xx pushd coredns
-    xx wget "$URL" -O "$FILE"
-    xx yes | xx unzip -q "$FILE"
-    xx rm -f "$FILE"
-    xx rm -f coredns
-    xx ln -s "$(basename "$FILE" .zip)" coredns
+    BIN="$(basename "$FILE" .zip)"
+    if [ ! -f "$BIN" ]; then
+        xx wget "$URL" -O "$FILE"
+        xx yes | xx unzip -q "$FILE"
+        xx rm -f "$FILE"
+        xx rm -f coredns
+        xx ln -s "$BIN" coredns
+    fi
     xx touch direct.conf
     xx ./coredns > coredns.log 2>&1 &
     xx popd
@@ -128,9 +131,11 @@ setup_pf() {
     #URL=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
     NAME="pf/$(basename "$URL")"
-    xx curl -fsSL "$URL" -o "$NAME"
-    # Add a trailing linefeed for later file concatenation
-    echo >> "$NAME"
+    if [ ! -f "$NAME" ]; then
+        xx curl -fsSL "$URL" -o "$NAME"
+        # Add a trailing linefeed for later file concatenation
+        echo >> "$NAME"
+    fi
 
     cat << EOL > pf/lan_ip_list.txt
 0.0.0.0/8
@@ -165,6 +170,8 @@ EOL
     xx sudo pfctl -vvvs Tables
     xx sudo pfctl -vvvs nat
     xx sudo pfctl -vvvs rules
+
+    echo "Proxy server(s): $(cat pf/lan_ip_list.txt | tr'\n' ' ')"
 }
 
 start_proxy() {
@@ -191,6 +198,7 @@ stop_proxy() {
     fi
 
     xx sudo pfctl -d || true
+    xx sudo pfctl -F all
 
     xx sudo killall -KILL redsocks2 || true
 
