@@ -171,7 +171,7 @@ EOL
     xx sudo pfctl -vvvs nat
     xx sudo pfctl -vvvs rules
 
-    echo "Proxy server(s): $(cat pf/lan_ip_list.txt | tr'\n' ' ')"
+    echo "Proxy server(s): $(cat pf/proxy_ip_list.txt | tr '\n' ' ')"
 }
 
 start_proxy() {
