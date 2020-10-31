@@ -107,6 +107,10 @@ setup_coredns() {
 setup_network() {
     NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+    if [ -z "$DEV" ]; then
+        errecho "Network interface $NET seems unstable."
+        exit 1
+    fi
     xx networksetup -setdnsservers "$DEV" 127.0.0.1
     xx networksetup -setv6off "$DEV"
 }
@@ -204,6 +208,10 @@ stop_proxy() {
 
     NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+    if [ -z "$DEV" ]; then
+        errecho "Network interface $NET seems unstable."
+        exit 1
+    fi
     xx networksetup -setdnsservers "$DEV" empty
     xx networksetup -setv6automatic "$DEV"
 
@@ -237,6 +245,10 @@ show_status() {
 
     NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+    if [ -z "$DEV" ]; then
+        errecho "Network interface $NET seems unstable."
+        exit 1
+    fi
     xx networksetup -getdnsservers "$DEV"
     echo
 
