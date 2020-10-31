@@ -72,7 +72,7 @@ config_proxy() {
 }
 
 gh_latest_release() {
-    curl -fsSL "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | cut -d'"' -f4
+    xx curl -fsSL "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | cut -d'"' -f4
 }
 
 map_arch() {
@@ -174,12 +174,12 @@ start_proxy() {
         exit 1
     fi
 
-    setup_coredns
-    setup_network
-    setup_redsocks2
-    setup_pf
+    xx setup_coredns
+    xx setup_network
+    xx setup_redsocks2
+    xx setup_pf
 
-    xx curl -4sL https://ifconfig.co/json | python -m json.tool
+    xx curl -4svL https://ifconfig.co/json | python -m json.tool
 }
 
 # Essentially reverse operation of start_proxy
@@ -201,7 +201,7 @@ stop_proxy() {
 
     xx sudo killall -KILL coredns || true
 
-    xx curl -4sL https://ifconfig.co/json | python -m json.tool
+    xx curl -4svL https://ifconfig.co/json | python -m json.tool
 }
 
 is_pf_enabled() {
@@ -233,7 +233,7 @@ show_status() {
     echo
 
     if [ "$(xx ifconfig "$NET" | grep -Ec "\sinet6\s")" -ne 0 ]; then
-        echo "$DEV seems have IPv6 access, need manual confirmation."
+        echo "$DEV seems have IPv6 access, ${RED}need manual confirmation$RST."
     else
         echo "$DEV have no IPv6 access."
     fi
@@ -298,20 +298,20 @@ case "$1" in
     ;;
     "start")
         [ $# -ne 1 ] && usage 1
-        start_proxy
+        xx start_proxy
     ;;
     "stop")
         [ $# -ne 1 ] && usage 1
-        stop_proxy
+        xx stop_proxy
         ;;
     "restart")
         [ $# -ne 1 ] && usage 1
-        stop_proxy
-        start_proxy
+        xx stop_proxy
+        xx start_proxy
         ;;
     "show")
         [ $# -ne 1 ] && usage 1
-        show_status
+        xx show_status
     ;;
     *)
     usage 1
