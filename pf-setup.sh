@@ -51,7 +51,8 @@ config_proxy() {
     for i in $HOST; do
         if ! is_ipv4 "$i"; then
             IPS="$(xx dig +short "$i")"
-            # TODO: filter out IPv6 if any
+            # Filter out IPv6 if any
+            IPS="$(echo "$IPS" | grep -v :)"
             if [ -z "$IPS" ]; then
                 errecho "Cannot get DNS A record of '$i'"
                 exit 1
@@ -64,7 +65,8 @@ config_proxy() {
     # shellcheck disable=SC2086
     # shellcheck disable=SC2116
     IPLIST="$(echo $IPLIST)"
-    FILE=proxy_ip_list.txt
+    mkdir -p pf
+    FILE="pf/proxy_ip_list.txt"
     echo "$IPLIST" | tr ' ' '\n' > "$FILE"
     echo "Saved $IPLIST to $FILE"
 }
@@ -95,7 +97,7 @@ setup_coredns() {
     xx rm -f coredns
     xx ln -s "$(basename "$FILE" .zip)" coredns
     xx touch direct.conf
-    ./coredns 2>&1 coredns.log &
+    xx ./coredns > coredns.log 2>&1 &
     xx popd
 }
 
@@ -112,12 +114,12 @@ ask_sudo() {
 }
 
 setup_redsocks2() {
-    # TODO: download redsocks2 first
-    redsocks2/redsocks2-release -c release.conf
+    #redsocks2/redsocks2-release -c release.conf
+    errecho TODO: setup redsocks2
 }
 
 setup_pf() {
-    FILE=proxy_ip_list.txt
+    FILE="pf/proxy_ip_list.txt"
     if [ ! -f "$FILE" ]; then
         errecho "Please run '$(basename "$0") config' first"
         exit 1
@@ -125,12 +127,12 @@ setup_pf() {
 
     #URL=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
-    NAME="$(basename "$URL")"
+    NAME="pf/$(basename "$URL")"
     xx curl -fsSL "$URL" -o "$NAME"
     # Add a trailing linefeed for later file concatenation
     echo >> "$NAME"
 
-    cat << EOL > lan_ip_list.txt
+    cat << EOL > pf/lan_ip_list.txt
 0.0.0.0/8
 10.0.0.0/8
 127.0.0.0/8
@@ -141,9 +143,9 @@ setup_pf() {
 240.0.0.0/4
 EOL
 
-    cat *_ip_list.txt > direct.txt
+    cat pf/*_ip_list.txt > pf/direct.txt
     mkdir -p /var/tmp/pf
-    cp direct.txt /var/tmp/pf
+    cp pf/direct.txt /var/tmp/pf
 
     cat << EOL > /var/tmp/pf/pf.conf
 #
@@ -151,7 +153,7 @@ EOL
 #
 
 table <direct> persist file "/var/tmp/pf/direct.txt"
-rdr pass on lo0 proto tcp from any to !<direct> -> 127.0.0.1 port 12345
+rdr pass on lo0 proto tcp from any to !<direct> -> 127.0.0.1 port 1079
 pass out route-to (lo0 127.0.0.1) proto tcp from any to !<direct>
 
 EOL
@@ -166,7 +168,7 @@ EOL
 }
 
 start_proxy() {
-    FILE=proxy_ip_list.txt
+    FILE="pf/proxy_ip_list.txt"
     if [ ! -f "$FILE" ]; then
         errecho "Please run '$(basename "$0") config' first"
         exit 1
@@ -182,7 +184,7 @@ start_proxy() {
 
 # Essentially reverse operation of start_proxy
 stop_proxy() {
-    FILE=proxy_ip_list.txt
+    FILE="pf/proxy_ip_list.txt"
     if [ ! -f "$FILE" ]; then
         errecho "Config file not found, skip disable proxy."
         exit 1
