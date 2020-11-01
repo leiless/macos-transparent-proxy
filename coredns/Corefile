@@ -11,6 +11,7 @@
     }
 }
 
+# Add foreign boostrap DNS addresses for direct routing
 .:53000 {
     #debug
     #loop
@@ -20,6 +21,7 @@
 
     dnsredir . {
         to 114.114.114.114 223.5.5.5
+        pf +create +v4_only direct
     }
 }
 
@@ -52,11 +54,12 @@
         import mainland_doh
     }
 
-    # Exception list
+    # Domain in direct.conf will be routing directly
     dnsredir direct.conf {
         path_reload 3s
         health_check 10s
         import mainland_doh
+        pf +create +v4_only direct
     }
 
     # see: https://github.com/curl/curl/wiki/DNS-over-HTTPS
