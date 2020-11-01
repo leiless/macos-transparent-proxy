@@ -100,7 +100,7 @@ setup_coredns() {
         xx ln -s "$BIN" coredns
     fi
     xx touch direct.conf
-    xx ./coredns > coredns.log 2>&1 &
+    xx sudo ./coredns > coredns.log 2>&1 &
     xx popd
 }
 
