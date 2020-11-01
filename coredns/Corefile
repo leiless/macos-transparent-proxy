@@ -13,7 +13,7 @@
 
 # Add foreign boostrap DNS addresses for direct routing
 .:53000 {
-    #debug
+    debug
     #loop
     log . {combined}
 
@@ -35,7 +35,7 @@
 }
 
 .:53 {
-    #debug
+    debug
     #loop
     log . {combined}
     reload 2s
