@@ -266,6 +266,12 @@ show_status() {
     fi
     echo
 
+    FILE="pf/proxy_ip_list.txt"
+    if [ -f "$FILE" ]; then
+        echo "Proxy server(s): $(cat "$FILE" | tr '\n' ' ')"
+        echo
+    fi
+
     PROTO_ADDR_PID="$(xx netstat -anvp tcp | grep -E "\sLISTEN\s" | awk '{ print $1, $4, $9 }' | grep -E "\.1080\s" || true)"
     if [ -z "$PROTO_ADDR_PID" ]; then
         echo "There is no process listening at port 1080 on TCP protocol."
