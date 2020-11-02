@@ -207,6 +207,8 @@ stop_proxy() {
         exit 1
     fi
 
+    ask_sudo
+
     NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
@@ -223,14 +225,11 @@ stop_proxy() {
 
     xx sudo killall -KILL redsocks2 || true
 
-    xx curl -4svL https://ifconfig.co/json | python -m json.tool
+    xx curl -4svL https://ifconfig.co/json | python -m json.tool || true
 }
 
 is_pf_enabled() {
-    if sudo pfctl -s info 2> /dev/null | grep -q "^Status: Enabled "; then
-        return 0
-    fi
-    return 1
+    sudo pfctl -s info 2> /dev/null | grep -q "^Status: Enabled "
 }
 
 show_status() {
