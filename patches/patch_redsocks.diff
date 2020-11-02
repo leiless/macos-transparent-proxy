@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 8227494..606cbe9 100644
+index 8227494..7899321 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -2,14 +2,14 @@ ifdef DISABLE_SHADOWSOCKS
@@ -15,7 +15,7 @@ index 8227494..606cbe9 100644
          tcpdns.o gen/version.o
 -CFLAGS +=-fPIC -O3
  endif
-+CFLAGS += -fPIC -mmacosx-version-min=10.8
++CFLAGS += -fPIC -mmacosx-version-min=10.9 -arch x86_64
  SRCS := $(OBJS:.o=.c)
  CONF := config.h
  DEPS := .depend
