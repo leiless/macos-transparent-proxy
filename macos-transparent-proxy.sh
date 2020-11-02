@@ -185,10 +185,11 @@ start_proxy() {
         exit 1
     fi
 
-    xx setup_coredns
-    xx setup_network
     xx setup_redsocks2
     xx setup_pf
+    # CoreDNS should be setup after pf setup is done.
+    xx setup_coredns
+    xx setup_network
 
     xx curl -4svL https://ifconfig.co/json | python -m json.tool
 }
@@ -201,11 +202,6 @@ stop_proxy() {
         exit 1
     fi
 
-    xx sudo pfctl -d || true
-    xx sudo pfctl -F all
-
-    xx sudo killall -KILL redsocks2 || true
-
     NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
@@ -216,6 +212,11 @@ stop_proxy() {
     xx networksetup -setv6automatic "$DEV"
 
     xx sudo killall -KILL coredns || true
+
+    xx sudo pfctl -d || true
+    xx sudo pfctl -F all
+
+    xx sudo killall -KILL redsocks2 || true
 
     xx curl -4svL https://ifconfig.co/json | python -m json.tool
 }
