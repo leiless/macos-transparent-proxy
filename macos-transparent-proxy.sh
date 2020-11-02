@@ -252,7 +252,7 @@ show_status() {
     xx networksetup -getdnsservers "$DEV"
     echo
 
-    if [ "$(xx ifconfig "$NET" | grep -Ec "\sinet6\s")" -ne 0 ]; then
+    if [ "$(xx ifconfig "$NET" | grep -E "\sinet6\s" | grep -v "%$NET\s" | grep -Ec "\sinet6\s")" -ne 0 ]; then
         echo "$DEV seems have IPv6 access, ${RED}need manual confirmation$RST."
     else
         echo "$DEV have no IPv6 access."
