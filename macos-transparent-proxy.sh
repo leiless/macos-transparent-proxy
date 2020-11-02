@@ -185,6 +185,11 @@ start_proxy() {
         exit 1
     fi
 
+    if xx is_pf_enabled; then
+        errecho "Transparent proxy seems already started, please restart proxy or issue a bug report if it's not the case."
+        exit 1
+    fi
+
     xx setup_redsocks2
     xx setup_pf
     # CoreDNS should be setup after pf setup is done.
@@ -311,6 +316,11 @@ Usage:
 EOL
     exit "$1"
 }
+
+if [ "$(uname -s)" != Darwin ]; then
+    errecho "This script only valid in macOS."
+    exit 1
+fi
 
 if [ $# -eq 0 ]; then
     usage 0
