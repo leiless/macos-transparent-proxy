@@ -4,7 +4,7 @@
 # see: MIT License.
 #
 
-set -eu
+set -euf
 #set -x
 
 # see:
@@ -152,7 +152,8 @@ setup_pf() {
 240.0.0.0/4
 EOL
 
-    cat pf/*_ip_list.txt > pf/direct.txt
+    find pf -type f -name '*_ip_list.txt' -exec cat {} \; > pf/direct.txt
+
     mkdir -p /var/tmp/pf
     cp pf/direct.txt /var/tmp/pf
 
