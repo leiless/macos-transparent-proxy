@@ -227,7 +227,10 @@ stop_proxy() {
 }
 
 is_pf_enabled() {
-    return sudo pfctl -s info 2> /dev/null | grep -q "^Status: Enabled "
+    if sudo pfctl -s info 2> /dev/null | grep -q "^Status: Enabled "; then
+        return 0
+    fi
+    return 1
 }
 
 show_status() {
