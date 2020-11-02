@@ -31,7 +31,7 @@ xx() {
 
 errecho() {
     echo -ne "$RED" 1>&2
-    echo -ne "[ERROR] "
+    echo -n "[ERROR] " 1>&2
     echo "$@" 1>&2
     echo -ne "$RST" 1>&2
 }
