@@ -122,6 +122,9 @@ ask_sudo() {
 
 setup_redsocks2() {
     pushd redsocks2
+    if [ ! -f redsocks2 ]; then
+        xx unzip -q redsocks2-debug.zip
+    fi
     xx sudo ./redsocks2 -c redsocks2.conf &
     popd
 }
