@@ -2,7 +2,8 @@
 *.swp
 *.swo
 redsocks/
-redsocks2/redsocks2*
+redsocks2/redsocks2-debug
+redsocks2/redsocks2-release
 redsocks2/*.log
 coredns/coredns*
 coredns/direct.conf
