@@ -105,10 +105,10 @@ setup_coredns() {
 }
 
 setup_network() {
-    NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
-    DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+    INF="$(xx route -n get default | grep interface: | awk '{print $2}')"
+    DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
-        errecho "Network interface $NET seems unstable."
+        errecho "Network interface $INF seems unstable."
         exit 1
     fi
     xx networksetup -setdnsservers "$DEV" 127.0.0.1
@@ -210,10 +210,10 @@ stop_proxy() {
 
     ask_sudo
 
-    NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
-    DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+    INF="$(xx route -n get default | grep interface: | awk '{print $2}')"
+    DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
-        errecho "Network interface $NET seems unstable."
+        errecho "Network interface $INF seems unstable."
         exit 1
     fi
     xx networksetup -setdnsservers "$DEV" empty
@@ -243,21 +243,21 @@ show_status() {
     fi
     echo
 
-    NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
-    DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+    INF="$(xx route -n get default | grep interface: | awk '{print $2}')"
+    DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
 
     if [ -z "$DEV" ]; then
-        errecho "Network interface $NET seems unstable."
+        errecho "Network interface $INF seems unstable."
         exit 1
     fi
-    WIFI_NAME=$(xx networksetup -getairportnetwork "$NET" | awk -F 'Current Wi-Fi Network: ' '/Current Wi-Fi Network: /{print $2}')
+    WIFI_NAME=$(xx networksetup -getairportnetwork "$INF" | awk -F 'Current Wi-Fi Network: ' '/Current Wi-Fi Network: /{print $2}')
     if [ ! -z "$WIFI_NAME" ]; then
-        echo "$DEV($NET) SSID: $WIFI_NAME"
+        echo "$DEV($INF) SSID: $WIFI_NAME"
     fi
     xx networksetup -getdnsservers "$DEV"
     echo
 
-    if [ "$(xx ifconfig "$NET" | grep -E "\sinet6\s" | grep -v "%$NET\s" | grep -Ec "\sinet6\s")" -ne 0 ]; then
+    if [ "$(xx ifconfig "$INF" | grep -E "\sinet6\s" | grep -v "%$INF\s" | grep -Ec "\sinet6\s")" -ne 0 ]; then
         echo "$DEV seems have IPv6 access, ${RED}need manual confirmation$RST."
     else
         echo "$DEV have no IPv6 access."
