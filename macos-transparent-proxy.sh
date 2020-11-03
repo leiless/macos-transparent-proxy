@@ -121,8 +121,9 @@ ask_sudo() {
 }
 
 setup_redsocks2() {
-    #redsocks2/redsocks2-release -c release.conf
-    errecho TODO: setup redsocks2
+    pushd redsocks2
+    xx sudo ./redsocks2 -c redsocks2.conf &
+    popd
 }
 
 setup_pf() {
