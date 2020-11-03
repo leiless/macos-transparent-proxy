@@ -245,9 +245,14 @@ show_status() {
 
     NET="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $NET)" -B 1 | head -1 | cut -d' ' -f2-)"
+
     if [ -z "$DEV" ]; then
         errecho "Network interface $NET seems unstable."
         exit 1
+    fi
+    WIFI_NAME=$(xx networksetup -getairportnetwork "$NET" | awk -F 'Current Wi-Fi Network: ' '/Current Wi-Fi Network: /{print $2}')
+    if [ ! -z "$WIFI_NAME" ]; then
+        echo "$DEV($NET) SSID: $WIFI_NAME"
     fi
     xx networksetup -getdnsservers "$DEV"
     echo
