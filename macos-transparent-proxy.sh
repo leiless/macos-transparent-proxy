@@ -176,7 +176,7 @@ EOL
     xx sudo pfctl -vvvs nat
     xx sudo pfctl -vvvs rules
 
-    echo "Proxy server(s): $(cat pf/proxy_ip_list.txt | tr '\n' ' ')"
+    echo "Proxy server(s): $(tr '\n' ' ' < pf/proxy_ip_list.txt)"
 }
 
 start_proxy() {
@@ -251,7 +251,7 @@ show_status() {
         exit 1
     fi
     WIFI_NAME=$(xx networksetup -getairportnetwork "$INF" | awk -F 'Current Wi-Fi Network: ' '/Current Wi-Fi Network: /{print $2}')
-    if [ ! -z "$WIFI_NAME" ]; then
+    if [ -n "$WIFI_NAME" ]; then
         echo "$DEV($INF) SSID: $WIFI_NAME"
     fi
     xx networksetup -getdnsservers "$DEV"
@@ -273,7 +273,7 @@ show_status() {
 
     FILE="pf/proxy_ip_list.txt"
     if [ -f "$FILE" ]; then
-        echo "Proxy server(s): $(cat "$FILE" | tr '\n' ' ')"
+        echo "Proxy server(s): $(tr '\n' ' ' < "$FILE")"
         echo
     fi
 
