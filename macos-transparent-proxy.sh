@@ -13,6 +13,7 @@ set -euf
 if [ -t 2 ]; then
     RED="$(tput setaf 9)"
     GRN="$(tput setaf 10)"
+    CYN="$(tput setaf 14)"
     RST="$(tput sgr0)"
 else
     RED=""
@@ -206,9 +207,11 @@ start_proxy() {
 
     xx curl -4svL https://ifconfig.co/json | python -m json.tool
 
-    cat <<< EOL
+    cat << EOL
+
+${CYN}Transparent proxy started.
 Please visit https://ip.skk.moe/ to check transparent proxy further.
-Found a bug? Please issue a bug report at https://github.com/leiless/macos-transparent-proxy
+Found a bug? Please issue a bug report at https://github.com/leiless/macos-transparent-proxy${RST}
 
 EOL
 }
