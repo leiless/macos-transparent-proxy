@@ -205,6 +205,12 @@ start_proxy() {
     xx setup_network
 
     xx curl -4svL https://ifconfig.co/json | python -m json.tool
+
+    cat <<< EOL
+Please visit https://ip.skk.moe/ to check transparent proxy further.
+Found a bug? Please issue a bug report at https://github.com/leiless/macos-transparent-proxy
+
+EOL
 }
 
 # Essentially reverse operation of start_proxy
