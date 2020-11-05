@@ -93,7 +93,7 @@ setup_coredns() {
     xx pushd coredns
     BIN="$(basename "$FILE" .zip)"
     if [ ! -f "$BIN" ]; then
-        xx curl -fsSL "$URL" -o "$FILE"
+        xx curl -fSL "$URL" -o "$FILE"
         xx yes | xx unzip -q "$FILE"
         xx rm -f "$FILE"
         xx rm -f coredns
