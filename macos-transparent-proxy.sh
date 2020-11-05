@@ -93,7 +93,7 @@ setup_coredns() {
     xx pushd coredns
     BIN="$(basename "$FILE" .zip)"
     if [ ! -f "$BIN" ]; then
-        xx wget "$URL" -O "$FILE"
+        xx curl -fsSL "$URL" -o "$FILE"
         xx yes | xx unzip -q "$FILE"
         xx rm -f "$FILE"
         xx rm -f coredns
@@ -121,10 +121,18 @@ ask_sudo() {
 }
 
 setup_redsocks2() {
+    mkdir -p redsocks2
+
     pushd redsocks2
     if [ ! -f redsocks2 ]; then
+        if [ ! -f redsocks2-debug.zip ]; then
+            URL="TODO: download redsocks binaries..."
+            xx curl -fsSL "$URL" -o "$(basename "$URL")"
+        fi
+
         xx unzip -q redsocks2-debug.zip
     fi
+
     xx sudo ./redsocks2 -c redsocks2.conf &
     popd
 }
