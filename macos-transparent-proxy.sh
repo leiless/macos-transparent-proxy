@@ -134,7 +134,8 @@ setup_redsocks2() {
     if [ ! -f redsocks2 ]; then
         if [ ! -f redsocks2-debug.zip ]; then
             URL="https://github.com/leiless/macos-transparent-proxy/raw/main/redsocks2/redsocks2-debug.zip"
-            xx curl -fsSL "$URL" -o "$(basename "$URL")"
+            FILE="$(basename "$URL")"
+            xx curl -fsSL "$URL" -o "$FILE"
         fi
 
         xx unzip -q redsocks2-debug.zip
