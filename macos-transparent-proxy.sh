@@ -34,6 +34,7 @@ errecho() {
     echo -n "[ERROR] " 1>&2
     echo "$@" 1>&2
     echo -ne "$RST" 1>&2
+    exit 1
 }
 
 is_ipv4() {
@@ -44,7 +45,6 @@ config_proxy() {
     read -r -p "Enter proxy server(s): " HOST
     if [ -z "$HOST" ]; then
         errecho No host specified
-        exit 1
     fi
 
     IPLIST=""
@@ -55,7 +55,6 @@ config_proxy() {
             IPS="$(echo "$IPS" | grep -v :)"
             if [ -z "$IPS" ]; then
                 errecho "Cannot get DNS A record of '$i'"
-                exit 1
             fi
             i="$IPS"
         fi
@@ -110,7 +109,6 @@ setup_network() {
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
         errecho "Network interface $INF seems unstable."
-        exit 1
     fi
     xx networksetup -setdnsservers "$DEV" 127.0.0.1
     xx networksetup -setv6off "$DEV"
@@ -129,7 +127,6 @@ setup_redsocks2() {
         FILE="redsocks2-debug.zip"
         if [ "$(file -b --mime-type "$FILE")" != 'application/zip' ]; then
             errecho "$FILE is tracked by Git LFS, please 'brew install git-lfs' and 'git lfs pull'."
-            exit 1
         fi
 
         xx unzip -q redsocks2-debug.zip
@@ -143,7 +140,6 @@ setup_pf() {
     FILE="pf/proxy_ip_list.txt"
     if [ ! -f "$FILE" ]; then
         errecho "Please run '$(basename "$0") config' first"
-        exit 1
     fi
 
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
@@ -196,12 +192,10 @@ start_proxy() {
     FILE="pf/proxy_ip_list.txt"
     if [ ! -f "$FILE" ]; then
         errecho "Please run '$(basename "$0") config' first"
-        exit 1
     fi
 
     if xx is_pf_enabled; then
         errecho "Transparent proxy seems already started, please restart proxy or issue a bug report if it's not the case."
-        exit 1
     fi
 
     xx setup_redsocks2
@@ -221,7 +215,6 @@ stop_proxy() {
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
         errecho "Network interface $INF seems unstable."
-        exit 1
     fi
     xx networksetup -setdnsservers "$DEV" empty
     xx networksetup -setv6automatic "$DEV"
@@ -255,7 +248,6 @@ show_status() {
 
     if [ -z "$DEV" ]; then
         errecho "Network interface $INF seems unstable."
-        exit 1
     fi
     WIFI_NAME=$(xx networksetup -getairportnetwork "$INF" | awk -F 'Current Wi-Fi Network: ' '/Current Wi-Fi Network: /{print $2}')
     if [ -n "$WIFI_NAME" ]; then
@@ -325,7 +317,6 @@ EOL
 
 if [ "$(uname -s)" != Darwin ]; then
     errecho "This script only valid in macOS."
-    exit 1
 fi
 
 if [ $# -eq 0 ]; then
