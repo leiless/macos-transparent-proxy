@@ -100,12 +100,6 @@ setup_coredns() {
         xx ln -s "$BIN" coredns
     fi
 
-    URL="https://cdn.jsdelivr.net/gh/leiless/macos-transparent-proxy@main/coredns/Corefile"
-    FILE="$(basename "$URL")"
-    if [ ! -f "$FILE" ]; then
-        xx curl -fsSL "$URL" -o "$FILE"
-    fi
-
     xx touch direct.conf
     xx sudo ./coredns > coredns.log 2>&1 &
     xx popd
@@ -132,10 +126,10 @@ setup_redsocks2() {
 
     pushd redsocks2
     if [ ! -f redsocks2 ]; then
-        if [ ! -f redsocks2-debug.zip ]; then
-            URL="https://github.com/leiless/macos-transparent-proxy/raw/main/redsocks2/redsocks2-debug.zip"
-            FILE="$(basename "$URL")"
-            xx curl -fsSL "$URL" -o "$FILE"
+        FILE="redsocks2-debug.zip"
+        if [ "$(file -b --mime-type "$FILE")" != 'application/zip' ]; then
+            errecho "$FILE is tracked by Git LFS, please 'brew install git-lfs' and 'git lfs pull'."
+            exit 1
         fi
 
         xx unzip -q redsocks2-debug.zip
@@ -152,13 +146,12 @@ setup_pf() {
         exit 1
     fi
 
-    #URL=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
-    NAME="pf/$(basename "$URL")"
-    if [ ! -f "$NAME" ]; then
-        xx curl -fsSL "$URL" -o "$NAME"
+    FILE="pf/$(basename "$URL")"
+    if [ ! -f "$FILE" ]; then
+        xx curl -fsSL "$URL" -o "$FILE"
         # Add a trailing linefeed for later file concatenation
-        echo >> "$NAME"
+        echo >> "$FILE"
     fi
 
     cat << EOL > pf/lan_ip_list.txt
@@ -222,12 +215,6 @@ start_proxy() {
 
 # Essentially reverse operation of start_proxy
 stop_proxy() {
-    FILE="pf/proxy_ip_list.txt"
-    if [ ! -f "$FILE" ]; then
-        errecho "Config file not found, skip disable proxy."
-        exit 1
-    fi
-
     ask_sudo
 
     INF="$(xx route -n get default | grep interface: | awk '{print $2}')"
