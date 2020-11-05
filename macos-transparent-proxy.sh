@@ -29,7 +29,7 @@ xx() {
     "$@"
 }
 
-errecho() {
+errexit() {
     echo -ne "$RED" 1>&2
     echo -n "[ERROR] " 1>&2
     echo "$@" 1>&2
@@ -44,7 +44,7 @@ is_ipv4() {
 config_proxy() {
     read -r -p "Enter proxy server(s): " HOST
     if [ -z "$HOST" ]; then
-        errecho No host specified
+        errexit "No host specified."
     fi
 
     IPLIST=""
@@ -54,7 +54,7 @@ config_proxy() {
             # Filter out IPv6 if any
             IPS="$(echo "$IPS" | grep -v :)"
             if [ -z "$IPS" ]; then
-                errecho "Cannot get DNS A record of '$i'"
+                errexit "Cannot get DNS A record of '$i'."
             fi
             i="$IPS"
         fi
@@ -108,7 +108,7 @@ setup_network() {
     INF="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
-        errecho "Network interface $INF seems unstable."
+        errexit "Network interface $INF seems unstable."
     fi
     xx networksetup -setdnsservers "$DEV" 127.0.0.1
     xx networksetup -setv6off "$DEV"
@@ -126,7 +126,7 @@ setup_redsocks2() {
     if [ ! -f redsocks2 ]; then
         FILE="redsocks2-debug.zip"
         if [ "$(file -b --mime-type "$FILE")" != 'application/zip' ]; then
-            errecho "$FILE is tracked by Git LFS, please 'brew install git-lfs' and 'git lfs pull'."
+            errexit "$FILE is tracked by Git LFS, please 'brew install git-lfs' and 'git lfs pull'."
         fi
 
         xx unzip -q redsocks2-debug.zip
@@ -139,7 +139,7 @@ setup_redsocks2() {
 setup_pf() {
     FILE="pf/proxy_ip_list.txt"
     if [ ! -f "$FILE" ]; then
-        errecho "Please run '$(basename "$0") config' first"
+        errexit "Please run '$(basename "$0") config' first."
     fi
 
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
@@ -191,11 +191,11 @@ EOL
 start_proxy() {
     FILE="pf/proxy_ip_list.txt"
     if [ ! -f "$FILE" ]; then
-        errecho "Please run '$(basename "$0") config' first"
+        errexit "Please run '$(basename "$0") config' first."
     fi
 
     if xx is_pf_enabled; then
-        errecho "Transparent proxy seems already started, please restart proxy or issue a bug report if it's not the case."
+        errexit "Transparent proxy seems already started, please restart proxy or issue a bug report if it's not the case."
     fi
 
     xx setup_redsocks2
@@ -214,7 +214,7 @@ stop_proxy() {
     INF="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
-        errecho "Network interface $INF seems unstable."
+        errexit "Network interface $INF seems unstable."
     fi
     xx networksetup -setdnsservers "$DEV" empty
     xx networksetup -setv6automatic "$DEV"
@@ -247,7 +247,7 @@ show_status() {
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
 
     if [ -z "$DEV" ]; then
-        errecho "Network interface $INF seems unstable."
+        errexit "Network interface $INF seems unstable."
     fi
     WIFI_NAME=$(xx networksetup -getairportnetwork "$INF" | awk -F 'Current Wi-Fi Network: ' '/Current Wi-Fi Network: /{print $2}')
     if [ -n "$WIFI_NAME" ]; then
@@ -316,7 +316,7 @@ EOL
 }
 
 if [ "$(uname -s)" != Darwin ]; then
-    errecho "This script only valid in macOS."
+    errexit "This script only valid in macOS."
 fi
 
 if [ $# -eq 0 ]; then
