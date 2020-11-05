@@ -72,7 +72,7 @@ config_proxy() {
 }
 
 gh_latest_release() {
-    xx curl -fsSL "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | cut -d'"' -f4
+    xx curl -fSL "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | cut -d'"' -f4
 }
 
 map_arch() {
@@ -149,7 +149,7 @@ setup_pf() {
     URL=https://cdn.jsdelivr.net/gh/17mon/china_ip_list@master/china_ip_list.txt
     FILE="pf/$(basename "$URL")"
     if [ ! -f "$FILE" ]; then
-        xx curl -fsSL "$URL" -o "$FILE"
+        xx curl -fSL "$URL" -o "$FILE"
         # Add a trailing linefeed for later file concatenation
         echo >> "$FILE"
     fi
