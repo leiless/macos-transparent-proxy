@@ -99,6 +99,13 @@ setup_coredns() {
         xx rm -f coredns
         xx ln -s "$BIN" coredns
     fi
+
+    URL="https://cdn.jsdelivr.net/gh/leiless/macos-transparent-proxy@main/coredns/Corefile"
+    FILE="$(basename "$URL")"
+    if [ ! -f "$FILE" ]; then
+        xx curl -fsSL "$URL" -o "$FILE"
+    fi
+
     xx touch direct.conf
     xx sudo ./coredns > coredns.log 2>&1 &
     xx popd
@@ -126,7 +133,7 @@ setup_redsocks2() {
     pushd redsocks2
     if [ ! -f redsocks2 ]; then
         if [ ! -f redsocks2-debug.zip ]; then
-            URL="TODO: download redsocks binaries..."
+            URL="https://github.com/leiless/macos-transparent-proxy/raw/main/redsocks2/redsocks2-debug.zip"
             xx curl -fsSL "$URL" -o "$(basename "$URL")"
         fi
 
