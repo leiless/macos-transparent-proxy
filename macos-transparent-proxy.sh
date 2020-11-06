@@ -199,6 +199,10 @@ start_proxy() {
         errexit "Transparent proxy seems already started, please restart proxy or issue a bug report if it's not the case."
     fi
 
+    if ! netstat -anvp tcp | grep -E "\sLISTEN\s" | grep -Eq "\.1080\s"; then
+        errexit "There is no proxy program listening at port 1080 on TCP protocol."
+    fi
+
     xx setup_redsocks2
     xx setup_pf
     # CoreDNS should be setup after pf setup is done.
