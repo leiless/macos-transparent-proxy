@@ -215,7 +215,7 @@ start_proxy() {
 
 ${CYN}Transparent proxy started.
 Please visit https://ip.skk.moe/ to check transparent proxy further.
-Found a bug? Please issue a bug report at https://github.com/leiless/macos-transparent-proxy${RST}
+Found a bug? Please issue a bug report at https://git.io/JTpK1${RST}
 
 EOL
 }
