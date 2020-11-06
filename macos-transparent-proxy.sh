@@ -130,7 +130,7 @@ setup_redsocks2() {
             errexit "$FILE is tracked by Git LFS, please 'brew install git-lfs' and 'git lfs pull'."
         fi
 
-        xx unzip -q redsocks2-debug.zip
+        xx unzip -q "$FILE"
     fi
 
     xx sudo ./redsocks2 -c redsocks2.conf &
