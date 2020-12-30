@@ -31,13 +31,14 @@ xx() {
 cd "$(dirname "$0")"
 
 xx rm -rf redsocks
-xx git clone --depth 1 https://github.com/semigodking/redsocks
+xx git clone --depth 100 https://github.com/semigodking/redsocks
 
 xx rm -f redsocks2/redsocks2-debug
 xx rm -f redsocks2/redsocks2-release
 xx mkdir -p redsocks2
 
 xx pushd redsocks
+xx git checkout 7797a938a3945f0316640067da693b148f412f0b --detach
 xx git apply ../patches/patch_redsocks.diff
 xx make debug DISABLE_SHADOWSOCKS=true ENABLE_HTTPS_PROXY=true -j"$(sysctl -n hw.ncpu)"
 xx mv redsocks2 ../redsocks2/redsocks2-debug
