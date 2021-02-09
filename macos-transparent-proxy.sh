@@ -109,7 +109,7 @@ setup_network() {
     INF="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
-        errexit "Network interface $INF seems unstable."
+        errexit "Network interface '$INF' seems unstable."
     fi
     xx networksetup -setdnsservers "$DEV" 127.0.0.1
     xx networksetup -setv6off "$DEV"
