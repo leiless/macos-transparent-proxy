@@ -109,7 +109,7 @@ setup_network() {
     INF="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
-        errexit "Network interface '$INF' seems unstable."
+        errexit "Network interface '$INF' seems unstable, please try again later."
     fi
     xx networksetup -setdnsservers "$DEV" 127.0.0.1
     xx networksetup -setv6off "$DEV"
@@ -227,7 +227,7 @@ stop_proxy() {
     INF="$(xx route -n get default | grep interface: | awk '{print $2}')"
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
     if [ -z "$DEV" ]; then
-        errexit "Network interface '$INF' seems unstable."
+        errexit "Network interface '$INF' seems unstable, please try again later."
     fi
     xx networksetup -setdnsservers "$DEV" empty
     xx networksetup -setv6automatic "$DEV"
@@ -260,7 +260,7 @@ show_status() {
     DEV="$(xx networksetup -listnetworkserviceorder | grep " $INF)" -B 1 | head -1 | cut -d' ' -f2-)"
 
     if [ -z "$DEV" ]; then
-        errexit "Network interface '$INF' seems unstable."
+        errexit "Network interface '$INF' seems unstable, please try again later."
     fi
     WIFI_NAME=$(xx networksetup -getairportnetwork "$INF" | awk -F 'Current Wi-Fi Network: ' '/Current Wi-Fi Network: /{print $2}')
     if [ -n "$WIFI_NAME" ]; then
