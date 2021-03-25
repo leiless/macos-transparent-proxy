@@ -103,6 +103,8 @@ setup_coredns() {
     xx touch direct.conf
     xx sudo ./coredns > coredns.log 2>&1 &
     xx popd
+    # Wait coredns ready in case of dead loop
+    xx sleep 3
 }
 
 setup_network() {
