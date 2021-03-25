@@ -11,27 +11,29 @@
     }
 }
 
+(mainland_doh) {
+    #to doh://doh.pub/dns-query
+    #to ietf-doh://dns.alidns.com/dns-query
+    # In case dnsredir FROM is URL form
+    #bootstrap 114.114.114.114 223.5.5.5
+    #no_ipv6
+
+    to ietf-doh://223.5.5.5/dns-query ietf-doh://223.6.6.6/dns-query
+}
+
 # Add foreign boostrap DNS addresses for direct routing
 .:53000 {
     #debug
-    #loop
     log . {combined}
 
     import global_cache
 
     dnsredir . {
-        to 114.114.114.114 223.5.5.5
-        pf +create +v4_only direct
+        #to 114.114.114.114 223.5.5.5
+        import mainland_doh
+        #ipset direct
+        #pf +create +v4_only direct
     }
-}
-
-(mainland_doh) {
-    to doh://doh.pub/dns-query
-    to ietf-doh://dns.alidns.com/dns-query
-
-    # In case dnsredir FROM is URL form
-    bootstrap 114.114.114.114 223.5.5.5
-    no_ipv6
 }
 
 .:53 {
@@ -52,14 +54,18 @@
         health_check 5s
         policy round_robin
         import mainland_doh
+        spray
     }
 
     # Domain in direct.conf will be routing directly
+    # XXX: ipset must be present, otherwise add IP will be failed.
     dnsredir direct.conf {
         path_reload 3s
         health_check 10s
         import mainland_doh
+        ipset direct
         pf +create +v4_only direct
+        spray
     }
 
     # see: https://github.com/curl/curl/wiki/DNS-over-HTTPS
@@ -74,11 +80,20 @@
         to ietf-doh://dns.quad9.net/dns-query
         to ietf-doh://doh.opendns.com/dns-query
 
+        # Alternatives
+        #to ietf-doh://public.dns.iij.jp/dns-query
+        #to doh://dns.twnic.tw/dns-query
+        #to doh://doh.eastas.pi-dns.com/dns-query
+        #to ietf-doh://doh.xfinity.com/dns-query
+        #to ietf-doh://doh.powerdns.org
+        #to ietf-doh://doh.libredns.gr/dns-query
+
         # Likely be polluted in mainland China
         #to doh://cloudflare-dns.com/dns-query
         #to json-doh://dns.google/resolve
         #to ietf-doh://dns.google/dns-query
 
+        #bootstrap 114.114.114.114 223.5.5.5
         bootstrap 127.0.0.1:53000
         no_ipv6
     }
